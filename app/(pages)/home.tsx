@@ -40,7 +40,7 @@ const USERS = [
     id: '3', 
     name: 'John Doe', 
     lastMessage: 'Hey, how are you?', 
-    avatar: 'https://randomuser.me/api/portraits/men/1.jpg', 
+    avatar: '', 
     online: true,
     unreadCount: 2,
     timestamp: '10:30 AM'

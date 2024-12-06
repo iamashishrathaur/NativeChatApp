@@ -17,6 +17,7 @@ import {
 import ChatBubble2 from '@/components/ChatBubble2';
 import { Entypo, Ionicons, MaterialIcons } from '@expo/vector-icons';
 import { router } from 'expo-router';
+import { initMessageDB, syncMessage } from '@/DB/messageDB';
 
 // Mock data (replace with your actual data source)
 const MOCK_MESSAGES = [
@@ -26,7 +27,7 @@ const MOCK_MESSAGES = [
 ];
 
 const ChatScreen = () => {
-  const [messages, setMessages] = useState(MOCK_MESSAGES);
+  const [messages, setMessages] = useState([]);
   const [inputMessage, setInputMessage] = useState('');
   const flatListRef = useRef(null);
 
@@ -37,7 +38,10 @@ const ChatScreen = () => {
       id: String(messages.length + 1),
       text: inputMessage,
       sender: 'me',
-      timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+      timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      receiver: '',  
+      status:'', 
+      image:'' 
     };
 
     setMessages([...messages, newMessage]);
@@ -92,7 +96,7 @@ const ChatScreen = () => {
               </TouchableNativeFeedback>
               
               <TouchableNativeFeedback
-                onPress={() => router.push('/viocecall')}
+                onPress={() => {}}
                 background={TouchableNativeFeedback.Ripple('#ddd', true)}
               >
                 <View style={styles.iconButton}>

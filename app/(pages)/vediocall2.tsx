@@ -1,14 +1,14 @@
-import React, { useState } from 'react';
-import { 
-  View, 
-  Text, 
-  StyleSheet, 
-  TouchableOpacity, 
-  SafeAreaView, 
-  Dimensions, 
-  StatusBar, 
-  Animated, 
-  Easing
+import React, { useState, useRef } from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  SafeAreaView,
+  Dimensions,
+  StatusBar,
+  Animated,
+  PanResponder,
 } from 'react-native';
 import { Feather, Ionicons, MaterialIcons } from '@expo/vector-icons';
 
@@ -18,39 +18,36 @@ const VideoCallScreen = () => {
   const [isMuted, setIsMuted] = useState(false);
   const [isCameraOn, setIsCameraOn] = useState(true);
   const [isSpeakerOn, setIsSpeakerOn] = useState(true);
-  const [ringingAnimation] = useState(new Animated.Value(0));
+  const [cameraFacing, setCameraFacing] = useState('front'); // 'front' or 'back'
+
+  const smallVideoPosition = useRef(new Animated.ValueXY({ x: width - 120, y: 50 })).current;
 
   const toggleMute = () => setIsMuted(!isMuted);
   const toggleCamera = () => setIsCameraOn(!isCameraOn);
   const toggleSpeaker = () => setIsSpeakerOn(!isSpeakerOn);
+  const switchCamera = () =>
+    setCameraFacing((prev) => (prev === 'front' ? 'back' : 'front'));
 
-  const startRingingAnimation = () => {
-    Animated.loop(
-      Animated.sequence([
-        Animated.timing(ringingAnimation, {
-          toValue: 1,
-          duration: 1000,
-          easing: Easing.out(Easing.ease),
-          useNativeDriver: true,
-        }),
-        Animated.timing(ringingAnimation, {
-          toValue: 0,
-          duration: 1000,
-          easing: Easing.in(Easing.ease),
-          useNativeDriver: true,
-        }),
-      ])
-    ).start();
-  };
-
-  React.useEffect(() => {
-    startRingingAnimation();
-  }, []);
-
-  const ringScale = ringingAnimation.interpolate({
-    inputRange: [0, 1],
-    outputRange: [1, 1.5],
-  });
+  // PanResponder for draggable small window
+  const panResponder = useRef(
+    PanResponder.create({
+      onMoveShouldSetPanResponder: () => true,
+      onPanResponderMove: Animated.event(
+        [null, { dx: smallVideoPosition.x, dy: smallVideoPosition.y }],
+        { useNativeDriver: false }
+      ),
+      onPanResponderRelease: () => {
+        smallVideoPosition.flattenOffset();
+      },
+      onPanResponderGrant: () => {
+        smallVideoPosition.setOffset({
+          x: smallVideoPosition.x._value,
+          y: smallVideoPosition.y._value,
+        });
+        smallVideoPosition.setValue({ x: 0, y: 0 });
+      },
+    })
+  ).current;
 
   return (
     <View style={styles.container}>
@@ -62,21 +59,28 @@ const VideoCallScreen = () => {
         <Text style={styles.videoText}>Remote Participant's Video</Text>
       </View>
 
-      {/* Ringing Avatar */}
-      <View style={styles.avatarContainer}>
-        <Animated.View
-          style={[
-            styles.ring,
-            {
-              transform: [{ scale: ringScale }],
-              opacity: ringingAnimation,
-            },
-          ]}
-        />
-        <View style={styles.avatar}>
-          <Text style={styles.avatarInitials}>RP</Text>
+      {/* Draggable Small Video */}
+      <Animated.View
+        style={[
+          styles.smallVideo,
+          { transform: smallVideoPosition.getTranslateTransform() },
+        ]}
+        {...panResponder.panHandlers}
+      >
+        <View style={styles.smallVideoContent}>
+          {isCameraOn ? (
+            <Text style={styles.videoText}>{cameraFacing} Camera Feed</Text>
+          ) : (
+            <Text style={styles.videoText}>Camera Off</Text>
+          )}
         </View>
-      </View>
+        <TouchableOpacity
+          style={styles.switchCameraButton}
+          onPress={switchCamera}
+        >
+          <Ionicons name="camera-reverse-outline" size={20} color="#FFF" />
+        </TouchableOpacity>
+      </Animated.View>
 
       {/* Controls */}
       <SafeAreaView style={styles.controlsContainer}>
@@ -133,32 +137,32 @@ const styles = StyleSheet.create({
     color: '#FFF',
     fontSize: 14,
   },
-  avatarContainer: {
+  smallVideo: {
     position: 'absolute',
-    top: height / 4,
-    left: width / 2 - 50,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  ring: {
-    position: 'absolute',
-    width: 120,
-    height: 120,
-    borderRadius: 60,
-    backgroundColor: 'rgba(255, 255, 255, 0.3)',
-  },
-  avatar: {
     width: 100,
-    height: 100,
-    borderRadius: 50,
-    backgroundColor: '#FFF',
+    height: 150,
+    backgroundColor: '#333',
+    borderRadius: 10,
+    overflow: 'hidden',
+    elevation: 5, // Shadow for Android
+    shadowColor: '#000', // Shadow for iOS
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+  },
+  smallVideoContent: {
+    flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+    backgroundColor: '#555',
   },
-  avatarInitials: {
-    fontSize: 24,
-    color: '#444',
-    fontWeight: 'bold',
+  switchCameraButton: {
+    position: 'absolute',
+    bottom: 5,
+    right: 5,
+    backgroundColor: '#000',
+    padding: 5,
+    borderRadius: 15,
   },
   controlsContainer: {
     padding: 20,

@@ -1,3 +1,4 @@
+import imagePath from '@/constants/imagePath';
 import { Redirect, router } from 'expo-router';
 import React, { FC } from 'react';
 import { Image, StyleSheet, Text, View, TouchableNativeFeedback } from 'react-native';
@@ -20,12 +21,12 @@ const ChatUser: FC<ChatUserProps> = ({ user }) => {
 
   return (
     <TouchableNativeFeedback
-      onPress={() => {router.navigate('/chat')}}  // Define your onPress logic here
-      background={TouchableNativeFeedback.Ripple('rgba(0, 0, 0, 0.1)', false)}   // Ripple effect color
+      onPress={() => {router.push('/chat',{})}}  
+      background={TouchableNativeFeedback.Ripple('rgba(0, 0, 0, 0.1)', false)}
     >
       <View style={styles.chatItem}>
         <View style={styles.avatarContainer}>
-          <Image source={{ uri: avatar }} style={styles.avatar} />
+          <Image source={ avatar ?{ uri: avatar }: imagePath.avatar} style={styles.avatar} />
           {online && <View style={styles.onlineIndicator} />}
         </View>
 
@@ -68,6 +69,7 @@ const styles = StyleSheet.create({
     width: 56,
     height: 56,
     borderRadius: 28,
+    backgroundColor:'#D2D7DB'
   },
   onlineIndicator: {
     position: 'absolute',

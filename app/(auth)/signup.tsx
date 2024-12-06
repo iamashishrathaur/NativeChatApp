@@ -1,46 +1,45 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, KeyboardAvoidingView, Platform } from 'react-native';
-import { router } from 'expo-router';
 import AuthInput from './(components)/AuthInput';
 import AuthButton from './(components)/AuthButton';
 import { axiosInstance } from '@/api/apiClient';
-import { initAuthDB, insertAuthUser } from '@/DB/authDB';
-import { useAuthStore } from '@/store/useAuthStore';
+import { router } from 'expo-router';
 
-const Login = () => {
+const SignUp = () => {
+  const [fullname, setFullname] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const {isLoggingIn,login} = useAuthStore()
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleLogin = async () => {
-    const user = { email, password };
-    const success = await login(user);
-    if (success) {
-      router.replace('/(pages)/home'); 
+  const handleSignUp = async () => {
+    const user = { fullname, email, password };
+    setIsLoading(true);
+    try {
+      const response = await axiosInstance.post('/auth/signup', user);
+      console.log(response.data);
+    } catch (error: any) {
+      const errorMessage = error.response?.data?.message || error.message || "Failed to sign up. Please try again.";
+      console.error('Signup Error:', errorMessage);
+    } finally {
+      setIsLoading(false);
     }
   };
-  
 
   return (
     <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={styles.container}>
       <View style={styles.form}>
-        <Text style={styles.title}>Welcome Back</Text>
+        <Text style={styles.title}>Create an Account</Text>
+        <AuthInput icon="account-outline" placeholder="Full Name" value={fullname} onChangeText={setFullname} keyboardType=''/>
         <AuthInput icon="email-outline" placeholder="Email Address" value={email} onChangeText={setEmail} keyboardType="email-address" />
         <AuthInput icon="lock-outline" placeholder="Password" value={password} onChangeText={setPassword} secureTextEntry keyboardType=''/>
-
-        <TouchableOpacity activeOpacity={0.8} style={styles.forgotPassword}>
-              <Text style={styles.forgotPasswordText}>Forgot Password?</Text>
-        </TouchableOpacity>
-
-        <AuthButton title="Login" onPress={handleLogin} loading={isLoggingIn} />
-
+        <AuthButton title="Sign Up" onPress={handleSignUp} loading={isLoading} />
         <View style={styles.toggleContainer}>
             <Text style={styles.toggleText}>
-              Don't have an account?
+            Already have an account?
             </Text>
-            <TouchableOpacity activeOpacity={0.8} onPress={()=>router.navigate('/(auth)/signup')}>
+            <TouchableOpacity activeOpacity={0.8} onPress={()=>router.push('/(auth)')}>
               <Text style={styles.toggleActionText}>
-                Sign Up
+              Login
               </Text>
             </TouchableOpacity>
           </View>
@@ -65,14 +64,6 @@ const styles = StyleSheet.create({
     marginBottom: 20,
     textAlign: 'center',
   },
-  forgotPassword: {
-    alignSelf: 'flex-end',
-    marginBottom: 20,
-  },
-  forgotPasswordText: {
-    color: '#6366F1',
-    fontWeight: '600',
-  },
   toggleContainer: {
     flexDirection: 'row',
     justifyContent: 'center',
@@ -87,4 +78,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default Login;
+export default SignUp;
